@@ -1,0 +1,31 @@
+{
+  "name": "verdaccio-sqlite",
+  "version": "1.0.0",
+  "description": "Verdaccio SQLite authentication plugin",
+  "main": "lib/index.js",
+  "dependencies": {
+    "sqlite3": "^4.1.1"
+  },
+  "devDependencies": {
+    "@types/sqlite3": "^3.1.6",
+    "@verdaccio/types": "git+https://github.com/verdaccio/flow-types.git"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepare": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bchanudet/verdaccio-sqlite.git"
+  },
+  "keywords": [
+    "verdaccio",
+    "sqlite"
+  ],
+  "author": "Benjamin Chanudet",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bchanudet/verdaccio-sqlite/issues"
+  },
+  "homepage": "https://github.com/bchanudet/verdaccio-sqlite#readme"
+}
