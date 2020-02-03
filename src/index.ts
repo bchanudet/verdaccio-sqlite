@@ -1,6 +1,7 @@
 import { Callback, Logger, IPluginAuth } from '@verdaccio/types';
 import * as sqlite3 from 'sqlite3';
 import * as crypto from 'crypto';
+import { existsSync } from 'fs';
 
 
 interface SQLiteAuthConfig {
@@ -21,9 +22,7 @@ export default class SQLiteAuth  implements IPluginAuth<SQLiteAuthConfig> {
     private database_path : string;
     private password_secret: string;
     private queries : ISQLiteQueries;
-
     private logger: Logger;
-    private connOK: boolean;
     
     constructor(configuration : SQLiteAuthConfig, stuff: { logger: Logger}){
 
@@ -32,21 +31,32 @@ export default class SQLiteAuth  implements IPluginAuth<SQLiteAuthConfig> {
         this.queries = new SQLiteQueries(configuration.queries);
         this.logger = stuff.logger;
         
-        this.connOK = false;
+        if(!existsSync(this.database_path)){
+            this.logger.error('SQLite - Database doesn\'t exist at path: ' + this.database_path);
+        }
+        
+        if(this.queries.auth_user.length == 0){
+            this.logger.error('SQLite - auth_user query is empty. Users can\'t log in.');
+        }
+        
+        if(this.password_secret.length === 0){
+            this.logger.warn('SQLite - No secret provided. Password encryption disabled.');
+        }
 
-        // Calling initialization at the constructor check connection to the database.
-        this.test()
-            .then((success : boolean) => {
-                if(success) {
-                    this.connOK = true;
-                }
-            })
-            .catch((reason) => {
-                this.connOK = false;
-            });
+        if(this.queries.update_user.length == 0){
+            this.logger.warn('SQLite - update_user query is empty. Users can\'t change their passwords.');
+        }
+
+        if(this.queries.add_user.length == 0){
+            this.logger.warn('SQLite - add_user query is empty. Users can\'t create accounts.');
+        }
     }
 
     private hash(password: string) : string{
+        if(this.password_secret.length === 0){
+            return password;
+        }
+
         const hashed = crypto.pbkdf2Sync(password, this.password_secret, 10000, 64, 'sha512');
         return hashed.toString('hex');
     }
@@ -55,9 +65,7 @@ export default class SQLiteAuth  implements IPluginAuth<SQLiteAuthConfig> {
         const db = new sqlite3.Database(this.database_path);
 
         if(this.queries.auth_user.length == 0){
-            this.logger.info('SQLite - Can\'t authenticate: authenticate query is empty');
-            cb(null, false)
-            return;
+            return cb(null, false);
         }
 
         db.all(this.queries.auth_user,[user, this.hash(password)], (error, results) => {
@@ -65,12 +73,13 @@ export default class SQLiteAuth  implements IPluginAuth<SQLiteAuthConfig> {
                 this.logger.error('SQLite - ' + error.message);
                 cb(null, false);
             }
-            else if(results.length !== 1 || results[0].usergroups === null){
-                this.logger.error('SQLite - No results :' + JSON.stringify(results));
+            else if(results.length !== 1){
                 cb(null, false);
             }
             else { 
-                this.logger.info('SQLite - logged in: '+ results[0].username);
+                if(results[0].usergroups === null){
+                    results[0].usergroups = "";
+                }
                 cb(null, results[0].usergroups.split(','));
             }
         });
