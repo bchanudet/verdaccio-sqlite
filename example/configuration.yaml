@@ -1,0 +1,12 @@
+#
+# This is an example configuration for sqlite authentication.
+# Do not use it as-is in production!
+#
+auth:
+  sqlite:
+	path: "./users.db"
+	secret: "MyRandomSecretStringThatMustBeChanged"
+	queries:
+      add_user: "INSERT INTO `users`(`username`,`password`) VALUES (?,?);"
+      update_user: "UPDATE `users` SET `password`=? WHERE `username`=? AND `password`=?;"
+      auth_user: "SELECT u.`username`, GROUP_CONCAT(g.`name`) AS usergroups FROM `users` u LEFT JOIN `user_group` ug ON ug.`guid_user` = u.`guid` LEFT JOIN `groups` g ON ug.`guid_group` = g.`guid` WHERE u.`username` = ? AND u.`password` = ?"

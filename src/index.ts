@@ -1,8 +1,11 @@
 import { Callback, Logger, IPluginAuth } from '@verdaccio/types';
 import * as sqlite3 from 'sqlite3';
+import * as crypto from 'crypto';
+
 
 interface SQLiteAuthConfig {
     path : string;
+    secret: string;
     mode : number;
     queries : ISQLiteQueries;
 }
@@ -13,9 +16,10 @@ interface ISQLiteQueries{
     readonly auth_user: string;
 }
 
-export default class MysqlAuth  implements IPluginAuth<SQLiteAuthConfig> {
+export default class SQLiteAuth  implements IPluginAuth<SQLiteAuthConfig> {
 
     private database_path : string;
+    private password_secret: string;
     private queries : ISQLiteQueries;
 
     private logger: Logger;
@@ -24,6 +28,7 @@ export default class MysqlAuth  implements IPluginAuth<SQLiteAuthConfig> {
     constructor(configuration : SQLiteAuthConfig, stuff: { logger: Logger}){
 
         this.database_path = configuration.path;
+        this.password_secret = configuration.secret;
         this.queries = new SQLiteQueries(configuration.queries);
         this.logger = stuff.logger;
         
@@ -41,6 +46,11 @@ export default class MysqlAuth  implements IPluginAuth<SQLiteAuthConfig> {
             });
     }
 
+    private hash(password: string) : string{
+        const hashed = crypto.pbkdf2Sync(password, this.password_secret, 10000, 64, 'sha512');
+        return hashed.toString('hex');
+    }
+
     authenticate(user: string, password: string, cb: Callback){
         const db = new sqlite3.Database(this.database_path);
 
@@ -50,12 +60,18 @@ export default class MysqlAuth  implements IPluginAuth<SQLiteAuthConfig> {
             return;
         }
 
-        db.get(this.queries.auth_user,[user, password], (error, result) => {
-            if(error || result.length !== 1 || result[0].usergroups === null){
+        db.all(this.queries.auth_user,[user, this.hash(password)], (error, results) => {
+            if(error){
+                this.logger.error('SQLite - ' + error.message);
+                cb(null, false);
+            }
+            else if(results.length !== 1 || results[0].usergroups === null){
+                this.logger.error('SQLite - No results :' + JSON.stringify(results));
                 cb(null, false);
             }
             else { 
-                cb(null, result[0].usergroups.split(','));
+                this.logger.info('SQLite - logged in: '+ results[0].username);
+                cb(null, results[0].usergroups.split(','));
             }
         });
 
@@ -65,18 +81,19 @@ export default class MysqlAuth  implements IPluginAuth<SQLiteAuthConfig> {
     adduser(user: string, password: string, cb: Callback){
         const db = new sqlite3.Database(this.database_path);
 
-        if(this.queries.auth_user.length == 0){
+        if(this.queries.add_user.length == 0){
             this.logger.info('SQLite - Can\'t add user: add_user query is empty');
             cb(null, false)
             return;
         }
 
-        db.get(this.queries.auth_user,[user, password], (error, result) => {
-            if(error || result.length !== 1 || result[0].usergroups === null){
+        db.get(this.queries.add_user,[user, this.hash(password)], (error, result) => {
+            if(error){
+                this.logger.error('SQLite - ' + error.message);
                 cb(null, false);
             }
             else { 
-                cb(null, result[0].usergroups.split(','));
+                cb(null, true);
             }
         });
 
@@ -87,13 +104,14 @@ export default class MysqlAuth  implements IPluginAuth<SQLiteAuthConfig> {
         const db = new sqlite3.Database(this.database_path);
 
         if(this.queries.update_user.length == 0){
-            this.logger.info('MySQL - Can\'t change password: update_user query is empty');
+            this.logger.info('SQLite - Can\'t change password: update_user query is empty');
             cb(null, false)
             return;
         }
 
-        db.run(this.queries.update_user,[newPassword, user, password], (error) => {
+        db.run(this.queries.update_user,[this.hash(newPassword), user, this.hash(password)], (error) => {
             if(error){
+                this.logger.error('SQLite - ' + error.message);
                 cb(null, false);
             }
             else { 

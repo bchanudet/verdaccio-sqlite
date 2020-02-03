@@ -18,11 +18,15 @@ In your `config.yaml` file, look for the `auth` section. Add the following part 
 auth:
     sqlite:
         path: "PATH/TO/YOUR_DB.db"
+        secret: "YOUR_SECRET"
         queries:
             auth_user: 'SELECT QUERY'
             add_user: 'INSERT QUERY'
             update_user: 'UPDATE QUERY'
 ```
+
+`path` is the path of your SQLite database file. 
+`secret` is the secret salt used by [the Crypto module](https://nodejs.org/api/crypto.html#crypto_crypto_pbkdf2sync_password_salt_iterations_keylen_digest) of node.js. Every password that goes through this plugin is automatically encrypted using the [pbkdf2Sync()](https://nodejs.org/api/crypto.html#crypto_crypto_pbkdf2sync_password_salt_iterations_keylen_digest) method and `sha512` digest. **Please check that you password column can receive atleast 128 characters.**
 
 ### 3. Specify custom queries to match your database schema.
 
@@ -47,7 +51,7 @@ If not successful, the query must return an empty recordset.
 
 #### `add_user`: New user query 
 
-This query allows users to create a new record in the MySQL database.
+This query allows users to create a new record in the database.
 
 This query has two parameters in this exact order:
 
@@ -72,8 +76,8 @@ Declare `update_user` as an empty string to forbid anyone to update their passwo
 
 Have a look inside the [example](example/) folder to find an example of the configuration on a simple server:
 
-- [mysql-database.sql](example/mysql-database.sql) contains queries to setup a really simple database with 3 tables: `users`, `groups` and `user_group`
-- [mysql-config.yaml](example/mysql-config.yaml) describes the configuration to put into `config.yaml` to work with the schema described in the SQL file.
+- [create-database.sql](example/create-database.sql) contains queries to setup a really simple database with 3 tables: `users`, `groups` and `user_group`
+- [configuration.yaml](example/configuration.yaml) describes the configuration to put into `config.yaml` to work with the schema described in the SQL file.
 
 ## Development / Building
 
@@ -81,7 +85,7 @@ This plugin is a regular TypeScript project.
 
 ### Get the sources
 
-    $ git clone https://github.com/bchanudet/verdaccio-mysql.git
+    $ git clone https://github.com/bchanudet/verdaccio-sqlite.git
     $ npm install 
 
 ### Build the plugin and link it globally
@@ -90,8 +94,8 @@ For plugins, Verdaccio only looks for packages installed in its directory, or gl
 
     $ npm link
 
-This command wil build verdaccio-mysql, and add a symbolic link to the new version in the global repository of npm. This way it can be used with your local version of Verdaccio.
+This command wil build verdaccio-sqlite, and add a symbolic link to the new version in the global repository of npm. This way it can be used with your local version of Verdaccio.
 
 ## Found a bug?
 
-[Create a new issue](https://github.com/bchanudet/verdaccio-mysql/issues/new), I'll do my best to answer and fix the problem! 
+[Create a new issue](https://github.com/bchanudet/verdaccio-sqlite/issues/new), I'll do my best to answer and fix the problem! 
