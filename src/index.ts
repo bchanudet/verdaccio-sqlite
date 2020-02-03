@@ -31,22 +31,19 @@ export default class SQLiteAuth  implements IPluginAuth<SQLiteAuthConfig> {
         this.queries = new SQLiteQueries(configuration.queries);
         this.logger = stuff.logger;
         
+        // Basic configuration check
         if(!existsSync(this.database_path)){
             this.logger.error('SQLite - Database doesn\'t exist at path: ' + this.database_path);
         }
-        
         if(this.queries.auth_user.length == 0){
             this.logger.error('SQLite - auth_user query is empty. Users can\'t log in.');
         }
-        
         if(this.password_secret.length === 0){
             this.logger.warn('SQLite - No secret provided. Password encryption disabled.');
         }
-
         if(this.queries.update_user.length == 0){
             this.logger.warn('SQLite - update_user query is empty. Users can\'t change their passwords.');
         }
-
         if(this.queries.add_user.length == 0){
             this.logger.warn('SQLite - add_user query is empty. Users can\'t create accounts.');
         }
