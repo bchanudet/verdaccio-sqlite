@@ -88,7 +88,6 @@ export default class SQLiteAuth  implements IPluginAuth<SQLiteAuthConfig> {
         const db = new sqlite3.Database(this.database_path);
 
         if(this.queries.add_user.length == 0){
-            this.logger.info('SQLite - Can\'t add user: add_user query is empty');
             cb(null, false)
             return;
         }
@@ -110,7 +109,6 @@ export default class SQLiteAuth  implements IPluginAuth<SQLiteAuthConfig> {
         const db = new sqlite3.Database(this.database_path);
 
         if(this.queries.update_user.length == 0){
-            this.logger.info('SQLite - Can\'t change password: update_user query is empty');
             cb(null, false)
             return;
         }
@@ -128,22 +126,6 @@ export default class SQLiteAuth  implements IPluginAuth<SQLiteAuthConfig> {
         db.close();
     }
 
-    private async test() : Promise<boolean> {
-        return new Promise<boolean>((resolve, reject) => {
-            const db = new sqlite3.Database(this.database_path);
-
-            db.get('SELECT 1', (err, res) => {
-                if(err){
-                    this.logger.error('SQLite - Test connection did not work');
-                    this.logger.error('SQLite - Error: '+ err.message);
-                    reject();
-                }
-                db.close();
-                resolve();
-                return;
-            });
-        });
-    }
 }
 
 
