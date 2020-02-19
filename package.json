@@ -1,6 +1,6 @@
 {
   "name": "verdaccio-sqlite",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Verdaccio SQLite authentication plugin",
   "main": "lib/index.js",
   "dependencies": {

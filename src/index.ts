@@ -6,7 +6,7 @@ import { existsSync } from 'fs';
 
 interface SQLiteAuthConfig {
     path : string;
-    secret: string;
+    password_secret: string;
     mode : number;
     queries : ISQLiteQueries;
 }
@@ -27,7 +27,7 @@ export default class SQLiteAuth  implements IPluginAuth<SQLiteAuthConfig> {
     constructor(configuration : SQLiteAuthConfig, stuff: { logger: Logger}){
 
         this.database_path = configuration.path;
-        this.password_secret = configuration.secret;
+        this.password_secret = configuration.password_secret;
         this.queries = new SQLiteQueries(configuration.queries);
         this.logger = stuff.logger;
         

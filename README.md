@@ -8,7 +8,7 @@ This plugin allows you to use a SQLite database as the store for your user data.
 
     > npm install -g verdaccio-sqlite
 
-Current release version is v1.0.0
+Current release version is v1.0.2
 
 ### 2. Add the plugin in your Verdaccio configuration
 
@@ -18,7 +18,7 @@ In your `config.yaml` file, look for the `auth` section. Add the following part 
 auth:
     sqlite:
         path: "PATH/TO/YOUR_DB.db"
-        secret: "YOUR_SECRET"
+        password_secret: "YOUR_SECRET"
         queries:
             auth_user: 'SELECT QUERY'
             add_user: 'INSERT QUERY'
@@ -26,7 +26,7 @@ auth:
 ```
 
 `path` is the path of your SQLite database file. 
-`secret` is the secret salt used by [the Crypto module](https://nodejs.org/api/crypto.html#crypto_crypto_pbkdf2sync_password_salt_iterations_keylen_digest) of node.js. Every password that goes through this plugin is automatically encrypted using the [pbkdf2Sync()](https://nodejs.org/api/crypto.html#crypto_crypto_pbkdf2sync_password_salt_iterations_keylen_digest) method and `sha512` digest. **Please check that you password column can receive atleast 128 characters.**
+`password_secret` is the secret salt used by [the Crypto module](https://nodejs.org/api/crypto.html#crypto_crypto_pbkdf2sync_password_salt_iterations_keylen_digest) of node.js. Every password that goes through this plugin is automatically encrypted using the [pbkdf2Sync()](https://nodejs.org/api/crypto.html#crypto_crypto_pbkdf2sync_password_salt_iterations_keylen_digest) method and `sha512` digest. **Please check that you password column can receive atleast 128 characters.**
 
 ### 3. Specify custom queries to match your database schema.
 
