@@ -67,17 +67,20 @@ export default class SQLiteAuth  implements IPluginAuth<SQLiteAuthConfig> {
 
         db.all(this.queries.auth_user,[user, this.hash(password)], (error, results) => {
             if(error){
-                this.logger.error('SQLite - ' + error.message);
+                this.logger.error('SQLite - auth_error:' + error.message);
                 cb(null, false);
             }
             else if(results.length !== 1){
                 cb(null, false);
             }
             else { 
-                if(results[0].usergroups === null){
-                    results[0].usergroups = "";
+                let groups: string[] = [''];
+                if(results[0].usergroups !== null){
+                    groups = results[0].usergroups.split(',');
                 }
-                cb(null, results[0].usergroups.split(','));
+
+                this.logger.info('SQLite - auth_success: ' + user + '; groups:' + JSON.stringify(groups));
+                cb(null, groups);
             }
         });
 
@@ -94,7 +97,7 @@ export default class SQLiteAuth  implements IPluginAuth<SQLiteAuthConfig> {
 
         db.get(this.queries.add_user,[user, this.hash(password)], (error, result) => {
             if(error){
-                this.logger.error('SQLite - ' + error.message);
+                this.logger.error('SQLite - adduser_error' + error.message);
                 cb(null, false);
             }
             else { 
@@ -115,7 +118,7 @@ export default class SQLiteAuth  implements IPluginAuth<SQLiteAuthConfig> {
 
         db.run(this.queries.update_user,[this.hash(newPassword), user, this.hash(password)], (error) => {
             if(error){
-                this.logger.error('SQLite - ' + error.message);
+                this.logger.error('SQLite - changepassword_error: ' + error.message);
                 cb(null, false);
             }
             else { 
@@ -125,14 +128,11 @@ export default class SQLiteAuth  implements IPluginAuth<SQLiteAuthConfig> {
 
         db.close();
     }
-
 }
-
 
 class SQLiteQueries implements ISQLiteQueries{
 
     constructor(private custom : ISQLiteQueries){
-
     }
 
     public get add_user() : string{
